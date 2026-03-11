@@ -4,5 +4,5 @@ Containerization of a Vercel like network architecture for security attacking an
 <div align="center">
   <img src="verseh-shit.jpeg" width="600" />
   <br/>
-  <em>Your footer text here</em>
+  <em>My shitty ass copyrighted logo (Tanned Balls Certified)</em>
 </div>
