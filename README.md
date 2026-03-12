@@ -1,5 +1,6 @@
 # verseh
-Containerization of a Vercel like network architecture for security attacking and defence
+Containerization of a Vercel like network architecture for penetration testing and defence purposes.
+This project is created in the context of course "Cybersecurity in new generation applications and new telematic services" in the ETSI Informatics of University of Málaga.
 
 <div align="center">
   <img src="verseh-shit.jpeg" width="600" />
