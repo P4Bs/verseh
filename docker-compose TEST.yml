@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  equipo1:
+    image: alpine:latest
+    container_name: equipo1
+    # Usamos sleep para mantener el contenedor encendido, 
+    # ya que Alpine por defecto no ejecuta ningún servicio continuo.
+    command: sleep infinity 
+    networks:
+      - mi_red_practica
+
+  equipo2:
+    image: alpine:latest
+    container_name: equipo2
+    command: sleep infinity
+    networks:
+      - mi_red_practica
+
+  honeypot: #TO DO: CONECTAR CON WAZUH
+    image: cowrie/cowrie:latest
+    container_name: honeypot_cowrie
+    volumes:
+      - volumen_logs_cowrie:/home/cowrie/cowrie/var/log/cowrie # <-- Usamos un volumen interno
+    ports:
+      - "22:2222" # <--- ¡EL CAMBIO MÁGICO! Tu puerto 22 apunta al 2222 de Cowrie
+      - "2223:2223" 
+    networks:
+      - mi_red_practica
+
+# Aquí declaramos la red personalizada a la que se conectarán
+networks:
+  mi_red_practica:
+    driver: bridge
+
+# ¡NUEVO! Le decimos a Docker que cree y gestione este volumen
+volumes:
+  volumen_logs_cowrie:
