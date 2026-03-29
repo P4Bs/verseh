@@ -1,0 +1,1 @@
+alert icmp any any -> any any (msg:"ALERTA: Ping detectado en la red"; sid:1000001; rev:1;)

@@ -27,6 +27,19 @@ services:
       - "2223:2223" 
     networks:
       - mi_red_practica
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: suricata
+    network_mode: "service:honeypot"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+    volumes:
+      - ./suricata/config:/etc/suricata
+      - ./suricata/logs:/var/log/suricata
+    command: -i eth0
+    restart: always
 
 # Aquí declaramos la red personalizada a la que se conectarán
 networks:
