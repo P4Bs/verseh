@@ -17,16 +17,24 @@ services:
     networks:
       - mi_red_practica
 
-  honeypot: #TO DO: CONECTAR CON WAZUH
+  # ==========================================
+  # HONEYPOT
+  # ==========================================
+  honeypot:
     image: cowrie/cowrie:latest
     container_name: honeypot_cowrie
     volumes:
-      - volumen_logs_cowrie:/home/cowrie/cowrie/var/log/cowrie # <-- Usamos un volumen interno
+      - volumen_logs_cowrie:/home/cowrie/cowrie/var/log/cowrie 
     ports:
-      - "22:2222" # <--- ¡EL CAMBIO MÁGICO! Tu puerto 22 apunta al 2222 de Cowrie
+      - "22:2222" 
       - "2223:2223" 
     networks:
       - mi_red_practica
+
+  # ==========================================
+  # SURICATA
+  # ==========================================
+    
   suricata:
     image: jasonish/suricata:latest
     container_name: suricata
@@ -41,11 +49,63 @@ services:
     command: -i eth0
     restart: always
 
-# Aquí declaramos la red personalizada a la que se conectarán
+# ==========================================
+  # WAZUH SIEM STACK (Single-Node)
+  # ==========================================
+  
+  # 1. Wazuh Indexer (Base de datos)
+  wazuh.indexer:
+    image: wazuh/wazuh-indexer:4.8.0
+    container_name: wazuh.indexer
+    environment:
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g" # Asignamos 1GB de RAM (ajusta si tienes más)
+    ports:
+      - "9200:9200"
+    volumes:
+      - wazuh_indexer_data:/var/lib/wazuh-indexer
+    networks:
+      - mi_red_practica
+
+  # 2. Wazuh Manager (El analizador)
+  wazuh.manager:
+    image: wazuh/wazuh-manager:4.8.0
+    container_name: wazuh.manager
+    depends_on:
+      - wazuh.indexer
+    ports:
+      - "1514:1514" # Puerto para que los agentes envíen logs
+      - "1515:1515" # Puerto para el registro de agentes
+      - "55000:55000" # API de Wazuh
+    volumes:
+      - wazuh_manager_data:/var/ossec/data
+      # ¡CONEXIÓN CON COWRIE! Leemos los logs del honeypot en modo solo lectura (ro)
+      - volumen_logs_cowrie:/var/ossec/logs/cowrie_logs:ro 
+    networks:
+      - mi_red_practica
+
+  # 3. Wazuh Dashboard (La interfaz web)
+  wazuh.dashboard:
+    image: wazuh/wazuh-dashboard:4.8.0
+    container_name: wazuh.dashboard
+    depends_on:
+      - wazuh.indexer
+      - wazuh.manager
+    ports:
+      - "443:5601" # Acceso a la web por HTTPS en tu localhost:443
+    volumes:
+      - wazuh_dashboard_data:/usr/share/wazuh-dashboard/data
+    networks:
+      - mi_red_practica
+
+# ==========================================
+# REDES Y VOLÚMENES
+# ==========================================
 networks:
   mi_red_practica:
     driver: bridge
 
-# ¡NUEVO! Le decimos a Docker que cree y gestione este volumen
 volumes:
   volumen_logs_cowrie:
+  wazuh_indexer_data:
+  wazuh_manager_data:
+  wazuh_dashboard_data:
