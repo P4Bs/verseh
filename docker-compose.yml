@@ -4,8 +4,6 @@ services:
   database:
     image: vulhub/opentsdb:2.4.0
     container_name: database
-    # Usamos sleep para mantener el contenedor encendido, 
-    # ya que Alpine por defecto no ejecuta ningún servicio continuo.
     command: sleep infinity
     ports:
       - "4242:4242"
@@ -26,16 +24,17 @@ services:
    ports:
     - "8080:80"
 
-  internal_server: #TO DO: CONECTAR CON WAZUH
+  internal_server:
     image: cowrie/cowrie:latest
     container_name: internal_server
     volumes:
-      - volumen_logs_cowrie:/home/cowrie/cowrie/var/log/cowrie # <-- Usamos un volumen interno
+      - volumen_logs_cowrie:/home/cowrie/cowrie/var/log/cowrie
     ports:
-      - "22:2222" # <--- ¡EL CAMBIO MÁGICO! Tu puerto 22 apunta al 2222 de Cowrie
+      - "22:2222"
       - "2223:2223" 
     networks:
       - business_network
+
   suricata:
     image: jasonish/suricata:latest
     container_name: suricata
@@ -50,7 +49,6 @@ services:
     command: -i eth0
     restart: always
 
-# Aquí declaramos la red personalizada a la que se conectarán
 networks:
   business_network:
     driver: bridge
@@ -58,6 +56,5 @@ networks:
       config:
         - subnet: 172.16.10.0/24
 
-# ¡NUEVO! Le decimos a Docker que cree y gestione este volumen
 volumes:
   volumen_logs_cowrie:
