@@ -1,32 +1,41 @@
 version: '3.8'
 
 services:
-  equipo1:
-    image: alpine:latest
-    container_name: equipo1
+  database:
+    image: vulhub/opentsdb:2.4.0
+    container_name: database
     # Usamos sleep para mantener el contenedor encendido, 
     # ya que Alpine por defecto no ejecuta ningún servicio continuo.
-    command: sleep infinity 
-    networks:
-      - mi_red_practica
-
-  equipo2:
-    image: alpine:latest
-    container_name: equipo2
     command: sleep infinity
+    ports:
+      - "4242:4242"
     networks:
-      - mi_red_practica
+      - business_network
 
-  honeypot: #TO DO: CONECTAR CON WAZUH
+  electron:
+   image: vulhub/electron:wine
+   command: bash /docker-entrypoint.sh
+   volumes:
+    - ./src:/project
+    - ./build:/build
+    - ./docker-entrypoint.sh:/docker-entrypoint.sh
+  web:
+   image: nginx:1
+   volumes:
+    - ./build:/usr/share/nginx/html
+   ports:
+    - "8080:80"
+
+  internal_server: #TO DO: CONECTAR CON WAZUH
     image: cowrie/cowrie:latest
-    container_name: honeypot_cowrie
+    container_name: internal_server
     volumes:
       - volumen_logs_cowrie:/home/cowrie/cowrie/var/log/cowrie # <-- Usamos un volumen interno
     ports:
       - "22:2222" # <--- ¡EL CAMBIO MÁGICO! Tu puerto 22 apunta al 2222 de Cowrie
       - "2223:2223" 
     networks:
-      - mi_red_practica
+      - business_network
   suricata:
     image: jasonish/suricata:latest
     container_name: suricata
@@ -43,8 +52,11 @@ services:
 
 # Aquí declaramos la red personalizada a la que se conectarán
 networks:
-  mi_red_practica:
+  business_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.10.0/24
 
 # ¡NUEVO! Le decimos a Docker que cree y gestione este volumen
 volumes:
